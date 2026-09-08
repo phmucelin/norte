@@ -1,12 +1,16 @@
 import SwiftUI
+import SwiftData
 import NorteKit
 
 struct AgendaSidebar: View {
+    @EnvironmentObject private var appState: AppState
+    @Environment(\.modelContext) private var modelContext
     @ObservedObject var coordinator: SyncCoordinator
     /// Dia selecionado na grade da semana.
     var selectedDay: Date
 
     @State private var showingNewEvent = false
+    @State private var editingEvent: CalendarEventData?
 
     private var calendar: Calendar { .current }
 
@@ -55,10 +59,38 @@ struct AgendaSidebar: View {
         }
         .background(.ultraThinMaterial)
         .sheet(isPresented: $showingNewEvent) {
-            EventEditorSheet(day: selectedDay) { title, context, start, end, isAllDay in
+            EventEditorSheet(day: selectedDay) { _, title, context, start, end, isAllDay, recurrence in
                 coordinator.createEvent(title: title, context: context,
-                                        start: start, end: end, isAllDay: isAllDay)
+                                        start: start, end: end, isAllDay: isAllDay,
+                                        recurrence: recurrence)
             }
+        }
+        .sheet(item: $editingEvent) { event in
+            EventEditorSheet(
+                day: selectedDay,
+                existing: event,
+                onSave: { id, title, _, start, end, isAllDay, recurrence in
+                    if let id {
+                        coordinator.updateEvent(id: id, title: title, start: start,
+                                                end: end, isAllDay: isAllDay, recurrence: recurrence)
+                    }
+                },
+                onDelete: { id in coordinator.deleteEvent(id: id) }
+            )
+        }
+    }
+
+    /// Clique num evento: se for espelho de tarefa, abre a tarefa no editor;
+    /// senão, abre o editor de evento (editar/apagar).
+    private func openForEdit(_ event: CalendarEventData) {
+        if event.isTaskMirror {
+            guard let taskID = event.taskID else { return }
+            let descriptor = FetchDescriptor<NorteTask>(predicate: #Predicate { $0.id == taskID })
+            if let task = try? modelContext.fetch(descriptor).first {
+                appState.editingTask = task
+            }
+        } else {
+            editingEvent = event
         }
     }
 
@@ -85,6 +117,9 @@ struct AgendaSidebar: View {
             } else {
                 ForEach(dayEvents) { event in
                     EventRow(event: event)
+                        .contentShape(Rectangle())
+                        .onTapGesture { openForEdit(event) }
+                        .help("Clique para editar")
                 }
             }
         }

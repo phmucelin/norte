@@ -25,7 +25,8 @@ public protocol CalendarServicing {
     func ensureCalendars() throws
     func events(from: Date, to: Date) throws -> [CalendarEventData]
     /// Cria um evento no calendário de contexto indicado (por título).
-    func createEvent(title: String, start: Date, end: Date, isAllDay: Bool, calendarTitle: String) throws
+    func createEvent(title: String, start: Date, end: Date, isAllDay: Bool,
+                     calendarTitle: String, recurrence: Recurrence) throws
     func mirrorItems() throws -> [MirrorItem]
     /// Aplica as ações e devolve, para cada tarefa criada, o ID do evento novo.
     @discardableResult
@@ -107,14 +108,15 @@ public final class EventKitCalendarService: CalendarServicing {
                 isTaskMirror: isMirror,
                 taskID: isMirror ? Self.parseTaskID(fromNotes: event.notes) : nil,
                 taskStatus: isMirror ? Self.parseStatus(fromNotes: event.notes) : nil,
-                taskContext: isMirror ? Self.parseContext(fromNotes: event.notes) : nil
+                taskContext: isMirror ? Self.parseContext(fromNotes: event.notes) : nil,
+                recurrence: Self.recurrence(from: event.recurrenceRules)
             )
         }
         .sorted { $0.start < $1.start }
     }
 
     public func createEvent(title: String, start: Date, end: Date, isAllDay: Bool,
-                            calendarTitle: String) throws {
+                            calendarTitle: String, recurrence: Recurrence = .none) throws {
         guard authorizationGranted else { throw NorteCalendarError.accessDenied }
         let calendar = store.calendars(for: .event).first { $0.title == calendarTitle }
             ?? store.defaultCalendarForNewEvents
@@ -131,7 +133,64 @@ public final class EventKitCalendarService: CalendarServicing {
             event.startDate = start
             event.endDate = max(end, start.addingTimeInterval(900))
         }
+        if let rule = Self.recurrenceRule(for: recurrence) { event.recurrenceRules = [rule] }
         try store.save(event, span: .thisEvent, commit: true)
+    }
+
+    /// Edita um evento já existente (título, datas, "dia inteiro" e recorrência).
+    /// Mantém o evento no mesmo calendário. Silencioso se o id não existir mais.
+    public func updateEvent(id: String, title: String, start: Date, end: Date,
+                            isAllDay: Bool, recurrence: Recurrence = .none) throws {
+        guard authorizationGranted else { throw NorteCalendarError.accessDenied }
+        guard let event = store.event(withIdentifier: id) else { return }
+        event.title = title
+        event.isAllDay = isAllDay
+        if isAllDay {
+            let day = Calendar.current.startOfDay(for: start)
+            event.startDate = day
+            event.endDate = day
+        } else {
+            event.startDate = start
+            event.endDate = max(end, start.addingTimeInterval(900))
+        }
+        // Substitui a regra de recorrência (nil limpa). Editar recorrência exige
+        // aplicar à série (futureEvents).
+        if let rule = Self.recurrenceRule(for: recurrence) {
+            event.recurrenceRules = [rule]
+        } else {
+            event.recurrenceRules = nil
+        }
+        try store.save(event, span: .futureEvents, commit: true)
+    }
+
+    /// Converte a recorrência do Norte numa regra do EventKit (nil = não repete).
+    static func recurrenceRule(for recurrence: Recurrence) -> EKRecurrenceRule? {
+        switch recurrence {
+        case .none: return nil
+        case .daily: return EKRecurrenceRule(recurrenceWith: .daily, interval: 1, end: nil)
+        case .weekly: return EKRecurrenceRule(recurrenceWith: .weekly, interval: 1, end: nil)
+        case .biweekly: return EKRecurrenceRule(recurrenceWith: .weekly, interval: 2, end: nil)
+        case .monthly: return EKRecurrenceRule(recurrenceWith: .monthly, interval: 1, end: nil)
+        }
+    }
+
+    /// Mapeia a regra do EventKit de volta para a recorrência do Norte. Padrões
+    /// não suportados (dias específicos etc.) caem em `.none`.
+    static func recurrence(from rules: [EKRecurrenceRule]?) -> Recurrence {
+        guard let rule = rules?.first else { return .none }
+        switch rule.frequency {
+        case .daily: return .daily
+        case .weekly: return rule.interval == 2 ? .biweekly : .weekly
+        case .monthly: return .monthly
+        default: return .none
+        }
+    }
+
+    /// Apaga um evento pelo identificador. Silencioso se já não existir.
+    public func deleteEvent(id: String) throws {
+        guard authorizationGranted else { throw NorteCalendarError.accessDenied }
+        guard let event = store.event(withIdentifier: id) else { return }
+        try store.remove(event, span: .thisEvent, commit: true)
     }
 
     // MARK: - Espelho

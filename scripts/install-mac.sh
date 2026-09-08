@@ -10,8 +10,27 @@ say() { printf '\033[1;36m%s\033[0m\n' "$*"; }
 
 say "→ Gerando o projeto e compilando (Release)..."
 xcodegen generate -q
+
+# Escolhe a melhor identidade de assinatura ESTÁVEL disponível. Com assinatura
+# estável, a permissão de calendário (TCC) é pedida uma vez e não reseta a cada
+# build — ao contrário do ad-hoc ("-"), cuja assinatura muda toda compilação.
+# Preferência: Apple Development (real) → "Norte Local" (autoassinado) → ad-hoc.
+SIGN_ARGS=()
+if security find-identity -v -p codesigning 2>/dev/null | grep -q "Apple Development"; then
+  TEAM=$(security find-certificate -c "Apple Development" -p 2>/dev/null \
+         | openssl x509 -noout -subject 2>/dev/null \
+         | grep -oE 'OU=[A-Z0-9]+' | head -1 | cut -d= -f2)
+  say "→ Assinando com 'Apple Development' (permissão de calendário persiste)."
+  SIGN_ARGS=(CODE_SIGN_IDENTITY="Apple Development" CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM="$TEAM")
+elif security find-identity -v -p codesigning 2>/dev/null | grep -q "Norte Local"; then
+  say "→ Assinando com identidade local estável 'Norte Local'."
+  SIGN_ARGS=(CODE_SIGN_IDENTITY="Norte Local" CODE_SIGN_STYLE=Manual OTHER_CODE_SIGN_FLAGS=--timestamp=none)
+else
+  say "→ (Assinatura ad-hoc: a permissão pode ser pedida a cada build. Rode ./scripts/create-signing-cert.sh uma vez, ou entre com sua conta Apple no Xcode.)"
+fi
+
 xcodebuild -project Norte.xcodeproj -scheme Norte-macOS -configuration Release \
-  -derivedDataPath build build 2>&1 | grep -E "BUILD (SUCCEEDED|FAILED)|error:" || true
+  -derivedDataPath build "${SIGN_ARGS[@]}" build 2>&1 | grep -E "BUILD (SUCCEEDED|FAILED)|error:" || true
 APP="build/Build/Products/Release/Norte.app"
 [ -d "$APP" ] || { echo "Build Release falhou."; exit 1; }
 

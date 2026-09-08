@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import EventKit
+import WidgetKit
 import NorteKit
 
 /// Orquestra EventKit: permissão, bootstrap dos calendários, leitura de
@@ -49,15 +50,49 @@ final class SyncCoordinator: ObservableObject {
             }
         }
 
+        topUpSeries()
         reconcile()
         loadEvents()
     }
 
+    /// Materializa as próximas ocorrências das tarefas recorrentes (Option 2:
+    /// "aparece em todos os dias"). Não depende de permissão de calendário.
+    func topUpSeries() {
+        guard let modelContext else { return }
+        RecurrenceEngine.fillSeries(in: modelContext)
+    }
+
     /// Cria um evento no calendário do contexto e recarrega a agenda.
-    func createEvent(title: String, context: TaskContext, start: Date, end: Date, isAllDay: Bool) {
+    func createEvent(title: String, context: TaskContext, start: Date, end: Date,
+                     isAllDay: Bool, recurrence: Recurrence = .none) {
         do {
             try service.createEvent(title: title, start: start, end: end,
-                                    isAllDay: isAllDay, calendarTitle: context.displayName)
+                                    isAllDay: isAllDay, calendarTitle: context.displayName,
+                                    recurrence: recurrence)
+            syncError = nil
+            loadEvents()
+        } catch {
+            syncError = error.localizedDescription
+        }
+    }
+
+    /// Edita um evento existente e recarrega a agenda.
+    func updateEvent(id: String, title: String, start: Date, end: Date,
+                     isAllDay: Bool, recurrence: Recurrence = .none) {
+        do {
+            try service.updateEvent(id: id, title: title, start: start, end: end,
+                                    isAllDay: isAllDay, recurrence: recurrence)
+            syncError = nil
+            loadEvents()
+        } catch {
+            syncError = error.localizedDescription
+        }
+    }
+
+    /// Apaga um evento e recarrega a agenda.
+    func deleteEvent(id: String) {
+        do {
+            try service.deleteEvent(id: id)
             syncError = nil
             loadEvents()
         } catch {
@@ -81,6 +116,10 @@ final class SyncCoordinator: ObservableObject {
         guard let end = calendar.date(byAdding: .day, value: spanDays, to: start) else { return }
         do {
             events = try service.events(from: start, to: end)
+            // Avisa os widgets pra atualizarem em segundos, em vez de esperar a
+            // janela de ~30 min. loadEvents() roda após toda mudança (criar/
+            // editar/apagar evento, editar tarefa) e no EKEventStoreChanged.
+            WidgetCenter.shared.reloadAllTimelines()
         } catch {
             syncError = error.localizedDescription
         }
@@ -93,6 +132,7 @@ final class SyncCoordinator: ObservableObject {
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 400_000_000)
             reconcileScheduled = false
+            topUpSeries()
             reconcile()
             loadEvents()
         }

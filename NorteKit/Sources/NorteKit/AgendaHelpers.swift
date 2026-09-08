@@ -17,10 +17,13 @@ public struct CalendarEventData: Identifiable, Equatable, Sendable {
     public var taskStatus: TaskStatus?
     /// Contexto/empresa da tarefa de origem (apenas eventos espelho).
     public var taskContext: TaskContext?
+    /// Recorrência do evento no calendário (mapeada do EKRecurrenceRule).
+    public var recurrence: Recurrence
 
     public init(id: String, title: String, start: Date, end: Date, isAllDay: Bool,
                 calendarTitle: String, colorHex: String, isTaskMirror: Bool,
-                taskID: UUID? = nil, taskStatus: TaskStatus? = nil, taskContext: TaskContext? = nil) {
+                taskID: UUID? = nil, taskStatus: TaskStatus? = nil, taskContext: TaskContext? = nil,
+                recurrence: Recurrence = .none) {
         self.id = id
         self.title = title
         self.start = start
@@ -32,6 +35,7 @@ public struct CalendarEventData: Identifiable, Equatable, Sendable {
         self.taskID = taskID
         self.taskStatus = taskStatus
         self.taskContext = taskContext
+        self.recurrence = recurrence
     }
 }
 

@@ -149,6 +149,9 @@ public final class NorteTask {
     public var completedAt: Date?
     /// Identificador do evento espelhado no calendário "📋 Tarefas".
     public var mirrorEventID: String?
+    /// Agrupa as ocorrências de uma tarefa recorrente (mesma série). nil em
+    /// tarefas não recorrentes ou em stores antigos (migração leve segura).
+    public var seriesID: UUID?
 
     public init(
         title: String,
@@ -159,7 +162,8 @@ public final class NorteTask {
         deadlineIsAllDay: Bool = true,
         recurrence: Recurrence = .none,
         notes: String = "",
-        createdAt: Date = .now
+        createdAt: Date = .now,
+        seriesID: UUID? = nil
     ) {
         self.id = UUID()
         self.title = title
@@ -173,6 +177,7 @@ public final class NorteTask {
         self.createdAt = createdAt
         self.completedAt = nil
         self.mirrorEventID = nil
+        self.seriesID = seriesID
     }
 
     public var context: TaskContext {

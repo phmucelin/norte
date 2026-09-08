@@ -101,3 +101,28 @@ public enum MirrorPlanner {
         return actions
     }
 }
+
+/// Cálculo puro (testável) das próximas ocorrências de uma série recorrente.
+public enum SeriesPlanner {
+    /// Datas das ocorrências que faltam materializar: a partir do prazo mais à
+    /// frente já existente (`head`), avança por `recurrence` até `horizon`,
+    /// pulando dias já ocupados (`existingDays`, em startOfDay).
+    public static func missingOccurrences(after head: Date,
+                                          existingDays: Set<Date>,
+                                          recurrence: Recurrence,
+                                          horizon: Date,
+                                          calendar: Calendar = .current) -> [Date] {
+        guard recurrence != .none else { return [] }
+        var out: [Date] = []
+        var cursor = head
+        var seen = existingDays
+        while let next = recurrence.nextDate(after: cursor), next <= horizon {
+            cursor = next
+            let day = calendar.startOfDay(for: next)
+            if seen.contains(day) { continue }
+            seen.insert(day)
+            out.append(next)
+        }
+        return out
+    }
+}

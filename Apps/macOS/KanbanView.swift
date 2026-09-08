@@ -75,11 +75,7 @@ struct KanbanView: View {
             guard let uuid = UUID(uuidString: idString),
                   let task = tasks.first(where: { $0.id == uuid }),
                   task.status != status else { continue }
-            let wasDone = task.status == .done
             task.status = status
-            if status == .done && !wasDone {
-                RecurrenceEngine.spawnNextIfNeeded(completed: task, in: modelContext)
-            }
             moved = true
         }
         if moved {
