@@ -1,0 +1,152 @@
+name: Norte
+options:
+  bundleIdPrefix: com.pedromucelin
+  deploymentTarget:
+    macOS: "26.0"
+    iOS: "26.0"
+  createIntermediateGroups: true
+
+packages:
+  NorteKit:
+    path: NorteKit
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  Norte-macOS:
+    type: application
+    platform: macOS
+    sources:
+      - Apps/macOS
+      - Apps/Shared
+    dependencies:
+      - package: NorteKit
+      - target: NorteWidgetsMac
+        embed: true
+    settings:
+      base:
+        PRODUCT_NAME: Norte
+        PRODUCT_BUNDLE_IDENTIFIER: com.pedromucelin.norte.mac
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Apps/macOS/Info.plist
+      properties:
+        NSCalendarsFullAccessUsageDescription: >-
+          O Norte mostra sua agenda e espelha tarefas com prazo no calendário
+          "📋 Tarefas" da sua conta Google.
+        LSApplicationCategoryType: public.app-category.productivity
+        CFBundleURLTypes:
+          - CFBundleURLName: com.pedromucelin.norte
+            CFBundleURLSchemes:
+              - norte
+    entitlements:
+      path: Apps/macOS/Norte.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.personal-information.calendars: true
+
+  Norte-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - Apps/iOS
+      - Apps/Shared
+    dependencies:
+      - package: NorteKit
+      - target: NorteWidgets
+        embed: true
+    settings:
+      base:
+        PRODUCT_NAME: Norte
+        PRODUCT_BUNDLE_IDENTIFIER: com.pedromucelin.norte
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Apps/iOS/Info.plist
+      properties:
+        NSCalendarsFullAccessUsageDescription: >-
+          O Norte mostra sua agenda e suas tarefas com prazo na tela de
+          bloqueio e no app.
+        UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          - CFBundleURLName: com.pedromucelin.norte
+            CFBundleURLSchemes:
+              - norte
+
+  NorteWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Apps/Widgets
+      - Apps/WidgetsShared
+      - Apps/Shared
+    dependencies:
+      - package: NorteKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pedromucelin.norte.widgets
+        CODE_SIGN_STYLE: Automatic
+        SKIP_INSTALL: true
+    info:
+      path: Apps/Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Norte
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        NSCalendarsFullAccessUsageDescription: >-
+          O widget do Norte mostra os próximos eventos e tarefas do seu dia.
+
+  NorteWidgetsMac:
+    type: app-extension
+    platform: macOS
+    sources:
+      - Apps/WidgetsMac
+      - Apps/WidgetsShared
+      - Apps/Shared
+    dependencies:
+      - package: NorteKit
+    settings:
+      base:
+        PRODUCT_NAME: NorteWidgetsMac
+        PRODUCT_BUNDLE_IDENTIFIER: com.pedromucelin.norte.mac.widgets
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: false
+        SKIP_INSTALL: true
+    info:
+      path: Apps/WidgetsMac/Info.plist
+      properties:
+        CFBundleDisplayName: Norte
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        NSCalendarsFullAccessUsageDescription: >-
+          O widget do Norte mostra os próximos eventos e tarefas do seu dia.
+    entitlements:
+      path: Apps/WidgetsMac/NorteWidgetsMac.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.personal-information.calendars: true
+
+schemes:
+  Norte-macOS:
+    build:
+      targets:
+        Norte-macOS: all
+    run:
+      config: Debug
+  Norte-iOS:
+    build:
+      targets:
+        Norte-iOS: all
+    run:
+      config: Debug
