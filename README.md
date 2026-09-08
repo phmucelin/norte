@@ -1,44 +1,46 @@
 <div align="center">
   <img src="assets/logo.png" width="128" alt="Norte" />
-  <h1>Norte 🧭</h1>
-  <p><b>Kanban + agenda nativos no seu Mac, pra organizar o dia a dia de quem programa.</b></p>
+  <h1>Norte</h1>
+  <p><b>A native Kanban + calendar app for your Mac, built to organize the day-to-day of people who ship code.</b></p>
   <p>
-    <img alt="Plataforma" src="https://img.shields.io/badge/macOS-26%2B-8b6bff?style=flat-square" />
+    <img alt="Platform" src="https://img.shields.io/badge/macOS-26%2B-8b6bff?style=flat-square" />
     <img alt="Swift" src="https://img.shields.io/badge/Swift-6-f05138?style=flat-square" />
-    <img alt="Licença" src="https://img.shields.io/badge/licença-MIT-36b37e?style=flat-square" />
-    <img alt="iPhone" src="https://img.shields.io/badge/iPhone-em%20breve-ffb020?style=flat-square" />
+    <img alt="License" src="https://img.shields.io/badge/license-MIT-36b37e?style=flat-square" />
+    <img alt="iPhone" src="https://img.shields.io/badge/iPhone-coming%20soon-ffb020?style=flat-square" />
   </p>
 </div>
 
-Norte é um app **nativo de macOS** (SwiftUI) que junta num lugar só o que um dev
-precisa pra não se perder entre várias frentes: um **Kanban de tarefas** (com
-contexto por empresa/projeto, urgência e prazo) e a sua **agenda da semana** —
-tudo com **widgets de desktop** pra bater o olho sem abrir nada.
+Norte is a **native macOS app** (SwiftUI) that brings together everything a
+developer needs to stay on top of multiple fronts: a **task Kanban** (with
+context per company/project, urgency, and deadlines) and your **weekly
+calendar** — all with **desktop widgets** so you can glance at your day without
+opening anything.
 
-Sem nuvem, sem login, sem servidor e **sem custo**: os dados ficam no seu Mac e a
-agenda vem do calendário do próprio sistema (que já sincroniza seu Google
-Calendar).
+No cloud, no login, no server, and **no cost**: your data stays on your Mac and
+the calendar comes from the system's own calendar (which already syncs with your
+Google Calendar).
 
-> **Feito pra vida real de dev:** trabalhar em 2 empresas + projeto próprio +
-> faculdade sem virar refém de 10 abas de navegador.
+> **Built for real dev life:** working across two companies + a side project +
+> university without becoming a hostage to ten browser tabs.
 
-## ✨ O que tem
+## Features
 
-- **Kanban** com colunas Backlog → A Fazer → Fazendo → Feito, arrastar e soltar,
-  cor por **contexto** (empresa/projeto), **urgência** (🔴🟡🟢) e prazo com
-  contagem regressiva.
-- **Tarefas recorrentes** (diária/semanal/quinzenal/mensal) — ao concluir, a
-  próxima ocorrência é criada sozinha.
-- **Agenda da semana** em grade, colorida, com os eventos do seu Google Calendar.
-- **Criar eventos** direto do app, no calendário do contexto.
-- **Widgets de desktop**: semana em grade, dia, e um mini-kanban de tarefas a
-  vencer. Clicar num widget abre o app; clicar numa tarefa abre ela pra editar.
-- **Espelho inteligente**: tarefas com prazo viram eventos num calendário oculto
-  "📋 Tarefas", então elas aparecem na agenda (e nos widgets) automaticamente.
+- **Kanban** with Backlog → To Do → Doing → Done columns, drag-and-drop, color
+  by **context** (company/project), **urgency** (high/medium/low), and deadlines
+  with a countdown.
+- **Recurring tasks** (daily/weekly/biweekly/monthly) — completing one
+  automatically creates the next occurrence.
+- **Weekly calendar** in a colored grid, showing events from your Google
+  Calendar.
+- **Create events** straight from the app, in the context's calendar.
+- **Desktop widgets**: week grid, day list, and a mini-Kanban of upcoming tasks.
+  Clicking a widget opens the app; clicking a task opens it for editing.
+- **Smart mirror**: tasks with a deadline become events in a hidden "Tasks"
+  calendar, so they show up in your agenda (and widgets) automatically.
 
-## 🚀 Instalar no Mac (bizu)
+## Install on Mac
 
-Pré-requisitos: **Xcode** e **[XcodeGen](https://github.com/yonyz/XcodeGen)**
+Requirements: **Xcode** and **[XcodeGen](https://github.com/yonyz/XcodeGen)**
 (`brew install xcodegen`).
 
 ```sh
@@ -47,42 +49,41 @@ cd norte
 ./scripts/install-mac.sh
 ```
 
-Esse script gera o projeto, compila em **Release** (importante: os widgets do
-macOS só registram em Release), instala o **Norte.app** em `/Applications` e
-recarrega os widgets. Na primeira abertura, autorize o acesso ao calendário.
+This script generates the project, builds in **Release** (important: macOS
+widgets only register in Release), installs **Norte.app** into `/Applications`,
+and reloads the widgets. On first launch, grant calendar access.
 
-Depois: botão direito na Mesa → **Editar Widgets** → **Norte** → arraste
-"Minha semana", "Meu dia" ou "Tarefas a vencer".
+Then: right-click the Desktop → **Edit Widgets** → **Norte** → drag "My Week",
+"My Day", or "Upcoming Tasks".
 
-> 💡 Se os widgets aparecerem em cinza, é uma config do macOS, não do app:
-> **Ajustes do Sistema → Mesa e Dock → Widgets → Estilo do widget → Colorido**.
+> If the widgets appear grayed out, that's a macOS setting, not the app:
+> **System Settings → Desktop & Dock → Widgets → Widget style → Full color**.
 
-## 📱 iPhone — em breve
+## iPhone — coming soon
 
-A versão de **iPhone** (agenda + widgets de tela de bloqueio) **está a caminho**,
-mas **ainda não está pronta pra uso**. O código do app iOS já está no repo, porém
-falta acabamento e a distribuição (conta Apple). Fica ligado nas próximas
-versões. 🙏
+The **iPhone** version (calendar + lock-screen widgets) **is on the way**, but is
+**not ready for use yet**. The iOS app code is already in the repo, but it still
+needs polish and distribution (Apple account). Stay tuned for upcoming releases.
 
-## 🛠️ Desenvolvimento
+## Development
 
 ```sh
-cd NorteKit && swift test     # testes de unidade da lógica (modelos, sync, agenda)
-xcodegen generate             # (re)gerar o Norte.xcodeproj
-open Norte.xcodeproj          # abrir no Xcode
+cd NorteKit && swift test     # unit tests for the logic (models, sync, agenda)
+xcodegen generate             # (re)generate Norte.xcodeproj
+open Norte.xcodeproj          # open in Xcode
 ```
 
-**Arquitetura:** um pacote local `NorteKit` (modelos, motor de espelhamento,
-helpers de agenda, serviço EventKit — tudo testável) + apps SwiftUI finos para
-macOS/iOS e a extensão de widgets. Detalhes em
+**Architecture:** a local `NorteKit` package (models, mirroring engine, agenda
+helpers, EventKit service — all testable) + thin SwiftUI apps for macOS/iOS and
+the widget extension. Details in
 [`docs/superpowers/specs`](docs/superpowers/specs).
 
-## 🤝 Contribuindo
+## Contributing
 
-Issues e PRs são bem-vindos! É um projeto pessoal que virou open source pra
-ajudar outros devs a se organizarem. Ideias de widget, temas e integrações são
-especialmente legais.
+Issues and PRs are welcome. This is a personal project that became open source to
+help other developers stay organized. Ideas for widgets, themes, and
+integrations are especially appreciated.
 
-## 📄 Licença
+## License
 
-MIT — veja [LICENSE](LICENSE). Use, modifique e compartilhe à vontade.
+MIT — see [LICENSE](LICENSE). Use, modify, and share freely.
